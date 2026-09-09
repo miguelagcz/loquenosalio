@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useLiveViews } from "@/hooks/useLiveViews";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -30,6 +31,7 @@ export default function PhotoDetail({
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
+  const views = useLiveViews("photos", photo.id, photo.views);
   const handleTouchStart = (
     event: React.TouchEvent<HTMLDivElement>
   ) => {
@@ -226,7 +228,7 @@ export default function PhotoDetail({
               "
             >
               <p className="text-zinc-400">
-                👁 {photo.views.toLocaleString()}
+                👁 {views.toLocaleString()}
               </p>
 
               <p className="text-zinc-400">
@@ -357,7 +359,7 @@ export default function PhotoDetail({
             </p>
 
             <p className="text-lg sm:text-xl font-semibold">
-              {photo.views.toLocaleString()}
+              {views.toLocaleString()}
             </p>
           </div>
 

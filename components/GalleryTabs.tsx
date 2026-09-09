@@ -2,16 +2,23 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Photo, Video } from "@/types";
 
 import MasonryGallery from "./MasonryGallery";
 import VideoGallery from "./VideoGallery";
 
 type GalleryTab = "photos" | "videos";
 
-export default function GalleryTabs() {
+interface Props {
+  photos: Photo[];
+  videos: Video[];
+}
+
+export default function GalleryTabs({ photos, videos }: Props) {
   const [activeTab, setActiveTab] =
     useState<GalleryTab>("photos");
 
+  // ... todo el resto del componente queda exactamente igual ...
   return (
     <section className="w-full">
 
@@ -149,7 +156,7 @@ export default function GalleryTabs() {
               duration: 0.25,
             }}
           >
-            <MasonryGallery />
+            <MasonryGallery photos={photos} />
           </motion.div>
         ) : (
           <motion.div
@@ -170,7 +177,7 @@ export default function GalleryTabs() {
               duration: 0.25,
             }}
           >
-            <VideoGallery />
+           <VideoGallery videos={videos} />
           </motion.div>
         )}
 

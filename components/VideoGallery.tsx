@@ -9,11 +9,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-import { videos } from "@/data/videos";
+import { Video } from "@/types";
 import GalleryToolbar from "./GalleryToolbar";
 import Skeleton from "./Skeleton";
+import { useLiveViews } from "@/hooks/useLiveViews";
 
-export default function VideoGallery() {
+export default function VideoGallery({ videos }: { videos: Video[] }) {
   const [search, setSearch] = useState("");
 
   const [selectedVideo, setSelectedVideo] =
@@ -22,7 +23,17 @@ export default function VideoGallery() {
   const [loadedVideos, setLoadedVideos] =
     useState<number[]>([]);
 
-  /* -------------------------------- */
+    const [openToken, setOpenToken] = useState(0);
+
+
+const liveViews = useLiveViews(
+  "videos",
+  selectedVideo?.id ?? null,
+  selectedVideo?.views ?? 0,
+  openToken
+);
+  /* -----------------------
+  --------- */
   /* FILTER */
   /* -------------------------------- */
 
@@ -199,9 +210,10 @@ useEffect(() => {
                 duration: 0.45,
                 delay: index * 0.07,
               }}
-              onClick={() =>
-                setSelectedVideo(video)
-              }
+             onClick={() => {
+  setSelectedVideo(video);
+  setOpenToken((t) => t + 1);
+}}
               className="
                 group
                 relative
@@ -676,11 +688,10 @@ useEffect(() => {
                     text-zinc-500
                   "
                 >
-
-                  <span>
-                    {selectedVideo.views.toLocaleString()}{" "}
-                    Views
-                  </span>
+<span>
+  {liveViews.toLocaleString()}{" "}
+  Views
+</span>
 
                   <span>
                     {selectedVideo.date}

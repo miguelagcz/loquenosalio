@@ -5,11 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-import { photos } from "@/data/photos";
+import { Photo } from "@/types";
 import Skeleton from "./Skeleton";
 import GalleryToolbar from "./GalleryToolbar";
 
-export default function MasonryGallery() {
+export default function MasonryGallery({ photos }: { photos: Photo[] }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [loadedImages, setLoadedImages] = useState<number[]>([]);

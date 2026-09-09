@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Orbitron, Inter } from "next/font/google";
 import "./globals.css";
+import { LenisProvider } from "@/components/LenisProvider";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -59,7 +60,6 @@ export const metadata: Metadata = {
     follow: true,
   },
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -70,7 +70,7 @@ export default function RootLayout({
       <body
         className={`${orbitron.variable} ${inter.variable}`}
       >
-        {children}
+        <LenisProvider>{children}</LenisProvider>
       </body>
     </html>
   );

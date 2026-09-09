@@ -1,12 +1,15 @@
 import { Photo } from "@/types";
 
+const STORAGE_BASE =
+  "https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal";
+
 export const photos: Photo[] = [
   {
     id: 1,
     title: "Night Street",
     description: "Night photography in downtown Tokyo.",
-    src: "/photos/photo1.jpg",
-    blur: "/photos/photo1.jpg",
+    src: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo1.png`,
+    blur: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo1.png`,
     width: 4000,
     heightPx: 6000,
     height: "h-80",
@@ -27,8 +30,8 @@ export const photos: Photo[] = [
     id: 2,
     title: "Mountain View",
     description: "Sunrise over the mountains.",
-    src: "/photos/photo2.jpg",
-    blur: "/photos/photo2.jpg",
+    src: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo2.png`,
+    blur: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo2.png`,
     width: 4000,
     heightPx: 5000,
     height: "h-56",
@@ -49,8 +52,8 @@ export const photos: Photo[] = [
     id: 3,
     title: "Portrait Light",
     description: "Studio portrait with soft lighting.",
-    src: "/photos/photo3.jpg",
-    blur: "/photos/photo3.jpg",
+    src: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo3.png`,
+    blur: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo3.png`,
     width: 3500,
     heightPx: 5000,
     height: "h-96",
@@ -71,8 +74,8 @@ export const photos: Photo[] = [
     id: 4,
     title: "Modern Building",
     description: "Architecture in the financial district.",
-    src: "/photos/photo4.jpg",
-    blur: "/photos/photo4.jpg",
+    src: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo4.jpg`,
+    blur: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo4.jpg`,
     width: 4000,
     heightPx: 5500,
     height: "h-72",
@@ -93,8 +96,8 @@ export const photos: Photo[] = [
     id: 5,
     title: "Forest Path",
     description: "A peaceful walk through the forest.",
-    src: "/photos/photo5.jpg",
-    blur: "/photos/photo5.jpg",
+    src: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo5.png`,
+    blur: `https://anotyxlaprxntkbacodq.supabase.co/storage/v1/object/public/loquesaliomal/photo5.png`,
     width: 4200,
     heightPx: 6200,
     height: "h-64",
