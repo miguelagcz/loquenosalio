@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { SlidersHorizontal, X } from "lucide-react";
 
 import { Photo } from "@/types";
+import { getGridSpan, getOrientation } from "@/lib/masonry";
 import Skeleton from "./Skeleton";
 import GalleryToolbar from "./GalleryToolbar";
 
@@ -13,52 +15,23 @@ export default function MasonryGallery({ photos }: { photos: Photo[] }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [loadedImages, setLoadedImages] = useState<number[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  /* -------------------------------- */
-  /* CATEGORIES */
-  /* -------------------------------- */
-
-  const categories = [
-    "All",
-    ...new Set(
-      photos.map((photo) => photo.category)
-    ),
-  ];
-
-  /* -------------------------------- */
-  /* FILTER */
-  /* -------------------------------- */
+  const categories = ["All", ...new Set(photos.map((photo) => photo.category))];
 
   const filteredPhotos = photos.filter((photo) => {
     const searchTerm = search.toLowerCase().trim();
 
     const matchesSearch =
       searchTerm === "" ||
-      photo.title
-        .toLowerCase()
-        .includes(searchTerm) ||
-      photo.category
-        .toLowerCase()
-        .includes(searchTerm) ||
-      photo.tags.some((tag) =>
-        tag
-          .toLowerCase()
-          .includes(searchTerm)
-      );
+      photo.title.toLowerCase().includes(searchTerm) ||
+      photo.category.toLowerCase().includes(searchTerm) ||
+      photo.tags.some((tag) => tag.toLowerCase().includes(searchTerm));
 
-    const matchesCategory =
-      category === "All" ||
-      photo.category === category;
+    const matchesCategory = category === "All" || photo.category === category;
 
-    return (
-      matchesSearch &&
-      matchesCategory
-    );
+    return matchesSearch && matchesCategory;
   });
-
-  /* -------------------------------- */
-  /* CLEAR FILTERS */
-  /* -------------------------------- */
 
   const clearFilters = () => {
     setSearch("");
@@ -66,317 +39,140 @@ export default function MasonryGallery({ photos }: { photos: Photo[] }) {
   };
 
   return (
-    <section
-      className="
-        max-w-7xl
-        mx-auto
-        px-4
-        sm:px-6
-        pb-20
-      "
-    >
+    <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+      <GalleryToolbar search={search} setSearch={setSearch} />
 
-      {/* TOOLBAR */}
-
-      <GalleryToolbar
-        search={search}
-        setSearch={setSearch}
-      />
-
-      {/* CATEGORIES */}
-
-      <div className="flex flex-wrap gap-3 mb-8">
-
-        {categories.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() =>
-              setCategory(item)
-            }
-            className={`
-              px-4
-              py-2
-              rounded-full
-              text-sm
-              transition-all
-              duration-300
-              ${
-                category === item
-                  ? `
-                    bg-white
-                    text-black
-                  `
-                  : `
-                    bg-zinc-900
-                    text-zinc-400
-                    hover:bg-zinc-800
-                    hover:text-white
-                  `
-              }
-            `}
-          >
-            {item}
-          </button>
-        ))}
-
-      </div>
-
-      {/* RESULT COUNT */}
-
-      {filteredPhotos.length > 0 && (
-        <div className="mb-6">
-
-          <p
-            className="
-              text-xs
-              uppercase
-              tracking-[0.2em]
-              text-zinc-600
-            "
-          >
-            {filteredPhotos.length}{" "}
-            {filteredPhotos.length === 1
-              ? "Photo"
-              : "Photos"}
+      {/* FILTRO ESCONDIDO — un botón discreto en la esquina, no una barra
+          de pills que compite visualmente con las fotos */}
+      <div className="relative mb-4 flex items-center justify-between">
+        {filteredPhotos.length > 0 && (
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
+            {filteredPhotos.length} {filteredPhotos.length === 1 ? "photo" : "photos"}
+            {category !== "All" && ` · ${category.toLowerCase()}`}
           </p>
+        )}
 
-        </div>
-      )}
+        <button
+          type="button"
+          onClick={() => setFilterOpen((v) => !v)}
+          aria-label="Filtrar por categoría"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-zinc-400 transition hover:border-white/25 hover:text-white"
+        >
+          {filterOpen ? <X size={14} /> : <SlidersHorizontal size={14} />}
+        </button>
 
-      {/* EMPTY STATE */}
+        <AnimatePresence>
+          {filterOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="absolute right-0 top-10 z-20 flex flex-col gap-1 rounded-lg border border-white/15 bg-black/95 p-2 backdrop-blur-md"
+            >
+              {categories.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => {
+                    setCategory(item);
+                    setFilterOpen(false);
+                  }}
+                  className={`whitespace-nowrap rounded-md px-3 py-1.5 text-left font-voice text-xs lowercase transition-colors ${
+                    category === item
+                      ? "bg-white/10 text-white"
+                      : "text-zinc-500 hover:text-white"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {filteredPhotos.length === 0 && (
         <div className="py-20 text-center">
-
-          <p className="text-zinc-500 text-lg">
-            No photos found.
-          </p>
-
+          <p className="text-lg text-zinc-500">no se encontraron fotos.</p>
           <button
             type="button"
             onClick={clearFilters}
-            className="
-              mt-4
-              px-5
-              py-2
-              rounded-full
-              bg-white
-              text-black
-              hover:bg-zinc-200
-              transition
-            "
+            className="mt-4 rounded-md border border-white/15 bg-white/5 px-5 py-2 text-sm text-white transition hover:bg-white/10"
           >
-            Clear filters
+            limpiar filtros
           </button>
-
         </div>
       )}
 
-      {/* MASONRY GRID */}
+      {/* GRID — mismo lenguaje que BentoHero: 6 columnas, dense, bordes marcados */}
+      <div className="grid grid-cols-3 gap-2 [grid-auto-flow:dense] sm:grid-cols-4 md:auto-rows-[44px] md:grid-cols-6">
+        {filteredPhotos.map((photo, i) => {
+          const { colSpan, rowSpan } = getGridSpan(photo.width, photo.heightPx);
+          const orientation = getOrientation(photo.width, photo.heightPx);
 
-      <div
-        className="
-          columns-1
-          md:columns-2
-          xl:columns-3
-          gap-6
-        "
-      >
-
-        {filteredPhotos.map(
-          (photo, index) => (
-
-            <motion.article
+          return (
+            <motion.div
               key={photo.id}
-              initial={{
-                opacity: 0,
-                y: 30,
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: Math.min(i * 0.04, 0.6) }}
+              className="col-span-3 sm:col-span-2"
+              style={{
+                gridColumn: `span ${colSpan}`,
+                gridRow: `span ${rowSpan}`,
               }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                duration: 0.5,
-                delay: index * 0.08,
-                ease: "easeOut",
-              }}
-              className="
-                mb-6
-                break-inside-avoid
-              "
             >
-
               <Link
                 href={`/photo/${photo.id}`}
-                className="
-                  block
-                  rounded-3xl
-                  overflow-hidden
-                  border
-                  border-white/10
-                  bg-white/5
-                  backdrop-blur-md
-                  shadow-xl
-                  transition-all
-                  duration-500
-                  hover:scale-[1.02]
-                  hover:border-white/20
-                  focus:outline-none
-                  focus-visible:ring-2
-                  focus-visible:ring-white/40
-                "
+                className="group relative block h-full min-h-[110px] overflow-hidden rounded-xl border border-white/15 bg-white/5 transition-colors duration-300 hover:border-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               >
+                {!loadedImages.includes(photo.id) && (
+                  <Skeleton className="absolute inset-0" />
+                )}
 
-                {/* IMAGE */}
+                <span className="absolute left-2 top-2 z-10 font-mono text-[10px] text-white/70">
+                  {String(i + 1).padStart(2, "0")} · {orientation}
+                </span>
 
-                <div
-                  className={`
-                    relative
-                    w-full
-                    overflow-hidden
-                    group
-                    ${photo.height}
-                  `}
+                <Image
+                  src={photo.src}
+                  alt={photo.title}
+                  fill
+                  placeholder="blur"
+                  blurDataURL={photo.blur}
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                  priority={i === 0}
+                  onLoad={() =>
+                    setLoadedImages((prev) =>
+                      prev.includes(photo.id) ? prev : [...prev, photo.id]
+                    )
+                  }
+                  className={`object-cover transition-all duration-700 ${
+                    loadedImages.includes(photo.id)
+                      ? "scale-100 opacity-100 blur-0"
+                      : "scale-105 opacity-0 blur-md"
+                  }`}
+                />
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/20 to-transparent p-4"
                 >
-
-                  {/* SKELETON */}
-
-                  {!loadedImages.includes(
-                    photo.id
-                  ) && (
-                    <Skeleton
-                      className="
-                        absolute
-                        inset-0
-                      "
-                    />
-                  )}
-
-                  {/* IMAGE */}
-
-                  <Image
-                    src={photo.src}
-                    alt={photo.title}
-                    fill
-                    placeholder="blur"
-                    blurDataURL={photo.blur}
-                    sizes="
-                      (max-width: 768px) 100vw,
-                      (max-width: 1280px) 50vw,
-                      33vw
-                    "
-                    priority={
-                      photo.id === 1
-                    }
-                    onLoad={() => {
-                      setLoadedImages(
-                        (prev) =>
-                          prev.includes(
-                            photo.id
-                          )
-                            ? prev
-                            : [
-                                ...prev,
-                                photo.id,
-                              ]
-                      );
-                    }}
-                    className={`
-                      object-cover
-                      transition-all
-                      duration-700
-                      ${
-                        loadedImages.includes(
-                          photo.id
-                        )
-                          ? `
-                            opacity-100
-                            scale-100
-                            blur-0
-                          `
-                          : `
-                            opacity-0
-                            scale-105
-                            blur-md
-                          `
-                      }
-                    `}
-                  />
-
-                  {/* HOVER OVERLAY */}
-
-                  <motion.div
-                    initial={{
-                      opacity: 0,
-                    }}
-                    whileHover={{
-                      opacity: 1,
-                    }}
-                    transition={{
-                      duration: 0.25,
-                    }}
-                    className="
-                      absolute
-                      inset-0
-                      flex
-                      flex-col
-                      justify-end
-                      bg-gradient-to-t
-                      from-black/85
-                      via-black/30
-                      to-transparent
-                      p-6
-                    "
-                  >
-
-                    <h3
-                      className="
-                        font-orbitron
-                        text-lg
-                        text-white
-                      "
-                    >
-                      {photo.title}
-                    </h3>
-
-                    <p
-                      className="
-                        text-sm
-                        text-zinc-300
-                        mt-2
-                      "
-                    >
-                      {photo.views.toLocaleString()}{" "}
-                      Views
-                      {" • "}
-                      {photo.date}
-                    </p>
-
-                    <p
-                      className="
-                        text-xs
-                        text-zinc-400
-                        mt-1
-                      "
-                    >
-                      {photo.category}
-                    </p>
-
-                  </motion.div>
-
-                </div>
-
+                  <h3 className="font-orbitron text-sm lowercase text-white sm:text-base">
+                    {photo.title}
+                  </h3>
+                  <p className="mt-1 text-xs lowercase text-zinc-300">
+                    {photo.views.toLocaleString()} views · {photo.category.toLowerCase()}
+                  </p>
+                </motion.div>
               </Link>
-
-            </motion.article>
-
-          )
-        )}
-
+            </motion.div>
+          );
+        })}
       </div>
-
     </section>
   );
 }

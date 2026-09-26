@@ -351,17 +351,17 @@ useEffect(() => {
                     p-5
                   "
                 >
-
-                  <h3
-                    className="
-                      font-orbitron
-                      text-base
-                      sm:text-lg
-                      font-medium
-                    "
-                  >
-                    {video.title}
-                  </h3>
+<h3
+  className="
+    font-orbitron
+    text-base
+    sm:text-lg
+    font-medium
+    lowercase
+  "
+>
+  {video.title}
+</h3>
 
                   <div
                     className="
@@ -379,10 +379,9 @@ useEffect(() => {
                       {video.duration}
                     </span>
 
-                    <span>
-                      {video.views.toLocaleString()}{" "}
-                      Views
-                    </span>
+                <span className="lowercase">
+  {video.views.toLocaleString()} views
+</span>
 
                   </div>
 
@@ -616,91 +615,45 @@ useEffect(() => {
 "
               />
 
-              {/* INFO */}
+{/* INFO */}
 
-              <div className="p-5">
+<div className="p-5">
+  <h2 className="font-orbitron text-xl font-medium lowercase text-white">
+    {selectedVideo.title}
+  </h2>
 
-                <h2
-                  className="
-                    text-xl
-                    font-semibold
-                  "
-                >
-                  {selectedVideo.title}
-                </h2>
+  <p className="mt-2 font-voice text-sm text-zinc-500">
+    {selectedVideo.date} · {selectedVideo.duration}
+  </p>
 
-                <p
-                  className="
-                    mt-2
-                    text-sm
-                    text-zinc-500
-                  "
-                >
-                  {selectedVideo.date}
-                  {" • "}
-                  {selectedVideo.duration}
-                </p>
+  {/* TAGS */}
+  <div className="mt-4 flex flex-wrap gap-2">
+    {selectedVideo.tags.map((tag) => (
+      <span
+        key={tag}
+        className="rounded-md border border-white/15 bg-white/5 px-3 py-1 font-mono text-[11px] lowercase text-zinc-400"
+      >
+        #{tag}
+      </span>
+    ))}
+  </div>
 
-                {/* TAGS */}
-
-                <div
-                  className="
-                    mt-4
-                    flex
-                    flex-wrap
-                    gap-2
-                  "
-                >
-
-                  {selectedVideo.tags.map(
-                    (tag) => (
-                      <span
-                        key={tag}
-                        className="
-                          rounded-full
-                          bg-white/10
-                          border
-                          border-white/10
-                          px-3
-                          py-1
-                          text-xs
-                          text-zinc-300
-                        "
-                      >
-                        #{tag}
-                      </span>
-                    )
-                  )}
-
-                </div>
-
-                {/* STATS */}
-
-                <div
-                  className="
-                    mt-5
-                    flex
-                    justify-between
-                    border-t
-                    border-white/10
-                    pt-4
-                    text-xs
-                    text-zinc-500
-                  "
-                >
-<span>
-  {liveViews.toLocaleString()}{" "}
-  Views
-</span>
-
-                  <span>
-                    {selectedVideo.date}
-                  </span>
-
-                </div>
-
-              </div>
-
+  {/* STATS */}
+  <div className="mt-5 flex gap-3 border-t border-white/10 pt-5">
+    <div className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5">
+      <p className="font-orbitron text-lg font-medium text-white">
+        {liveViews.toLocaleString()}
+      </p>
+      <p className="text-[9px] uppercase tracking-wider text-zinc-600">views</p>
+    </div>
+    <div className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5">
+      <p className="font-orbitron text-lg font-medium text-white">
+        {selectedVideo.duration}
+      </p>
+      <p className="text-[9px] uppercase tracking-wider text-zinc-600">duration</p>
+    </div>
+  </div>
+</div>
             </motion.div>
 
           </motion.div>

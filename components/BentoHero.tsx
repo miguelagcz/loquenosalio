@@ -17,9 +17,7 @@ interface BentoHeroProps {
 
 const container = {
   hidden: {},
-  show: {
-    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
-  },
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
 };
 
 const item = {
@@ -36,6 +34,20 @@ function formatViews(n: number) {
   return `${n}`;
 }
 
+/**
+ * Posiciones EXACTAS del render (grid de 6 columnas, auto-rows de 52px):
+ *
+ *   título        → col 1/4, row span 2
+ *   foto 01       → col 4/6, row span 3
+ *   stats         → col 6/7, row span 3
+ *   views totales → col 1/3, row span 2
+ *   foto 02       → col 3/5, row span 2
+ *   video         → col 6/7, row span 3  (se acomoda debajo de stats solo)
+ *   foto 03       → col 1/3, row span 2
+ *   foto 04       → col 3/6, row span 2
+ *
+ * En mobile todo se apila en una sola columna (sin spans).
+ */
 export function BentoHero({ photos, stats, featuredVideo }: BentoHeroProps) {
   const [p1, p2, p3, p4] = photos;
 
@@ -48,7 +60,7 @@ export function BentoHero({ photos, stats, featuredVideo }: BentoHeroProps) {
     >
       <motion.div
         variants={item}
-        className="mb-8 flex items-center justify-between text-xs text-zinc-500"
+        className="mb-6 flex items-center justify-between text-xs text-zinc-500"
       >
         <span className="font-orbitron tracking-wide text-white">mc</span>
         <div className="flex gap-5">
@@ -58,12 +70,13 @@ export function BentoHero({ photos, stats, featuredVideo }: BentoHeroProps) {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
+      <div className="grid grid-cols-1 gap-2 md:auto-rows-[52px] md:grid-cols-6">
+        {/* TÍTULO — col 1/4, row span 2 */}
         <motion.div
           variants={item}
-          className="col-span-1 flex items-center rounded-xl border border-white/10 bg-white/5 px-5 py-6 md:col-span-3"
+          className="flex items-center rounded-xl border border-white/15 bg-white/5 px-5 py-6 md:[grid-column:1/4] md:[grid-row:span_2]"
         >
-          <h1 className="font-orbitron text-4xl font-medium leading-[0.92] tracking-tight text-white lowercase sm:text-5xl">
+          <h1 className="font-orbitron text-3xl font-medium leading-[0.92] tracking-tight text-white lowercase sm:text-4xl">
             lo que
             <br />
             no salió
@@ -72,16 +85,17 @@ export function BentoHero({ photos, stats, featuredVideo }: BentoHeroProps) {
           </h1>
         </motion.div>
 
+        {/* FOTO 01 — col 4/6, row span 3 */}
         {p1 && (
           <motion.div
             variants={item}
-            className="relative col-span-1 row-span-2 min-h-[220px] overflow-hidden rounded-xl border border-white/10 md:col-span-3"
+            className="relative min-h-[160px] overflow-hidden rounded-xl border border-white/15 md:[grid-column:4/6] md:[grid-row:span_3]"
           >
             <Image
               src={p1.src}
               alt={p1.title}
               fill
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 768px) 100vw, 33vw"
               className="object-cover"
             />
             <span className="absolute left-2 top-2 font-mono text-[10px] text-white/70">
@@ -90,9 +104,10 @@ export function BentoHero({ photos, stats, featuredVideo }: BentoHeroProps) {
           </motion.div>
         )}
 
+        {/* STATS — col 6/7, row span 3 */}
         <motion.div
           variants={item}
-          className="relative col-span-1 flex flex-col justify-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 md:col-span-1"
+          className="relative flex flex-col justify-center gap-2.5 rounded-xl border border-white/15 bg-white/5 p-4 md:[grid-column:6/7] md:[grid-row:span_3]"
         >
           <span className="absolute right-3 top-3 flex items-center gap-1">
             <span className="relative flex h-1.5 w-1.5">
@@ -102,28 +117,23 @@ export function BentoHero({ photos, stats, featuredVideo }: BentoHeroProps) {
             <span className="text-[8px] text-zinc-500">live</span>
           </span>
           <div>
-            <p className="font-orbitron text-xl font-medium text-white">
-              {stats.photoCount}
-            </p>
+            <p className="font-orbitron text-xl font-medium text-white">{stats.photoCount}</p>
             <p className="text-[9px] text-zinc-500">photos</p>
           </div>
           <div>
-            <p className="font-orbitron text-xl font-medium text-white">
-              {stats.videoCount}
-            </p>
+            <p className="font-orbitron text-xl font-medium text-white">{stats.videoCount}</p>
             <p className="text-[9px] text-zinc-500">videos</p>
           </div>
           <div>
-            <p className="font-orbitron text-xl font-medium text-white">
-              {stats.since}
-            </p>
+            <p className="font-orbitron text-xl font-medium text-white">{stats.since}</p>
             <p className="text-[9px] text-zinc-500">since</p>
           </div>
         </motion.div>
 
+        {/* VIEWS TOTALES — col 1/3, row span 2 */}
         <motion.div
           variants={item}
-          className="col-span-1 flex flex-col justify-center rounded-xl border border-white/10 bg-white/5 p-4 md:col-span-2"
+          className="flex flex-col justify-center rounded-xl border border-white/15 bg-white/5 p-4 md:[grid-column:1/3] md:[grid-row:span_2]"
         >
           <p className="font-orbitron text-2xl font-medium text-white">
             {formatViews(stats.totalViews)}
@@ -131,20 +141,22 @@ export function BentoHero({ photos, stats, featuredVideo }: BentoHeroProps) {
           <p className="text-[9px] text-zinc-500">views totales</p>
         </motion.div>
 
+        {/* FOTO 02 — col 3/5, row span 2 */}
         {p2 && (
           <motion.div
             variants={item}
-            className="relative col-span-1 min-h-[110px] overflow-hidden rounded-xl border border-white/10 md:col-span-2"
+            className="relative min-h-[100px] overflow-hidden rounded-xl border border-white/15 md:[grid-column:3/5] md:[grid-row:span_2]"
           >
             <Image src={p2.src} alt={p2.title} fill sizes="33vw" className="object-cover" />
             <span className="absolute left-2 top-2 font-mono text-[10px] text-white/70">02</span>
           </motion.div>
         )}
 
+        {/* VIDEO — col 6/7, row span 3 (se acomoda solo debajo de stats) */}
         {featuredVideo && (
           <motion.div
             variants={item}
-            className="relative col-span-1 flex min-h-[110px] items-center justify-center overflow-hidden rounded-xl border border-white/10 md:col-span-1"
+            className="relative flex min-h-[100px] items-center justify-center overflow-hidden rounded-xl border border-white/15 md:[grid-column:6/7] md:[grid-row:span_3]"
           >
             <Image
               src={featuredVideo.poster}
@@ -156,26 +168,26 @@ export function BentoHero({ photos, stats, featuredVideo }: BentoHeroProps) {
             <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-black/40">
               <div className="ml-0.5 h-0 w-0 border-y-[6px] border-l-[9px] border-y-transparent border-l-white" />
             </div>
-            <span className="absolute left-2 top-2 font-mono text-[10px] text-white/70">
-              video
-            </span>
+            <span className="absolute left-2 top-2 font-mono text-[10px] text-white/70">video</span>
           </motion.div>
         )}
 
+        {/* FOTO 03 — col 1/3, row span 2 */}
         {p3 && (
           <motion.div
             variants={item}
-            className="relative col-span-1 min-h-[110px] overflow-hidden rounded-xl border border-white/10 md:col-span-2"
+            className="relative min-h-[100px] overflow-hidden rounded-xl border border-white/15 md:[grid-column:1/3] md:[grid-row:span_2]"
           >
             <Image src={p3.src} alt={p3.title} fill sizes="33vw" className="object-cover" />
             <span className="absolute left-2 top-2 font-mono text-[10px] text-white/70">03</span>
           </motion.div>
         )}
 
+        {/* FOTO 04 — col 3/6, row span 2 */}
         {p4 && (
           <motion.div
             variants={item}
-            className="relative col-span-1 min-h-[110px] overflow-hidden rounded-xl border border-white/10 md:col-span-3"
+            className="relative min-h-[100px] overflow-hidden rounded-xl border border-white/15 md:[grid-column:3/6] md:[grid-row:span_2]"
           >
             <Image src={p4.src} alt={p4.title} fill sizes="50vw" className="object-cover" />
             <span className="absolute left-2 top-2 font-mono text-[10px] text-white/70">

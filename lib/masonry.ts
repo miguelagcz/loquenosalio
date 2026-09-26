@@ -29,3 +29,33 @@ export function getOrientation(
   if (ratio > 2.2) return "panoramic";
   return "square";
 }
+
+/**
+ * Calcula cuántas columnas/filas debe ocupar una foto en un grid de 6
+ * columnas con `grid-auto-flow: dense` — así el grid queda irregular
+ * como el bento (verticales altas y angostas, horizontales anchas y
+ * bajas), sin tener que hardcodear posiciones a mano.
+ *
+ * Uso:
+ *   const { colSpan, rowSpan } = getGridSpan(photo.width, photo.heightPx);
+ *   <div style={{ gridColumn: `span ${colSpan}`, gridRow: `span ${rowSpan}` }}>
+ */
+export function getGridSpan(
+  width: number,
+  heightPx: number
+): { colSpan: number; rowSpan: number } {
+  const orientation = getOrientation(width, heightPx);
+  const ratio = width / heightPx;
+
+  switch (orientation) {
+    case "vertical":
+      return { colSpan: 2, rowSpan: Math.round(4 / ratio) || 4 };
+    case "panoramic":
+      return { colSpan: 4, rowSpan: 2 };
+    case "horizontal":
+      return { colSpan: 3, rowSpan: 2 };
+    case "square":
+    default:
+      return { colSpan: 2, rowSpan: 2 };
+  }
+}
