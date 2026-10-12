@@ -30,16 +30,16 @@ export function getOrientation(
   return "square";
 }
 
-/**
- * Calcula cuántas columnas/filas debe ocupar una foto en un grid de 6
- * columnas con `grid-auto-flow: dense` — así el grid queda irregular
- * como el bento (verticales altas y angostas, horizontales anchas y
- * bajas), sin tener que hardcodear posiciones a mano.
- *
- * Uso:
- *   const { colSpan, rowSpan } = getGridSpan(photo.width, photo.heightPx);
- *   <div style={{ gridColumn: `span ${colSpan}`, gridRow: `span ${rowSpan}` }}>
- */
+export function getBentoSpan(width: number, heightPx: number) {
+  const ratio = width / heightPx; // >1 = más ancha que alta, <1 = más alta que ancha
+
+  if (ratio >= 2.1) return { colSpan: 4, rowSpan: 2 }; // panorámica: ancha y baja
+  if (ratio >= 1.25) return { colSpan: 3, rowSpan: 3 }; // horizontal
+  if (ratio >= 0.85) return { colSpan: 2, rowSpan: 3 }; // cuadrada
+  if (ratio >= 0.55) return { colSpan: 2, rowSpan: 5 }; // vertical: angosta y alta
+  return { colSpan: 1, rowSpan: 6 }; // muy vertical: lo más angosto y alto
+}
+
 export function getGridSpan(
   width: number,
   heightPx: number

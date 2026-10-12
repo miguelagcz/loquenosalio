@@ -4,12 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 
 import { Photo } from "@/types";
 import { getGridSpan, getOrientation } from "@/lib/masonry";
 import Skeleton from "./Skeleton";
-import GalleryToolbar from "./GalleryToolbar";
 
 export default function MasonryGallery({ photos }: { photos: Photo[] }) {
   const [search, setSearch] = useState("");
@@ -40,22 +39,21 @@ export default function MasonryGallery({ photos }: { photos: Photo[] }) {
 
   return (
     <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-      <GalleryToolbar search={search} setSearch={setSearch} />
-
-      {/* FILTRO ESCONDIDO — un botón discreto en la esquina, no una barra
-          de pills que compite visualmente con las fotos */}
+      {/* Un único botón en la esquina agrupa búsqueda + categorías, sin
+          barra ancha ni fila de pills — la atención queda en las fotos */}
       <div className="relative mb-4 flex items-center justify-between">
         {filteredPhotos.length > 0 && (
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
             {filteredPhotos.length} {filteredPhotos.length === 1 ? "photo" : "photos"}
             {category !== "All" && ` · ${category.toLowerCase()}`}
+            {search && ` · "${search}"`}
           </p>
         )}
 
         <button
           type="button"
           onClick={() => setFilterOpen((v) => !v)}
-          aria-label="Filtrar por categoría"
+          aria-label="Buscar y filtrar por categoría"
           className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-zinc-400 transition hover:border-white/25 hover:text-white"
         >
           {filterOpen ? <X size={14} /> : <SlidersHorizontal size={14} />}
@@ -68,25 +66,40 @@ export default function MasonryGallery({ photos }: { photos: Photo[] }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-10 z-20 flex flex-col gap-1 rounded-lg border border-white/15 bg-black/95 p-2 backdrop-blur-md"
+              className="absolute right-0 top-10 z-20 w-56 rounded-lg border border-white/15 bg-black/95 p-2 backdrop-blur-md"
             >
-              {categories.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => {
-                    setCategory(item);
-                    setFilterOpen(false);
-                  }}
-                  className={`whitespace-nowrap rounded-md px-3 py-1.5 text-left font-voice text-xs lowercase transition-colors ${
-                    category === item
-                      ? "bg-white/10 text-white"
-                      : "text-zinc-500 hover:text-white"
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
+              <div className="relative mb-2">
+                <Search
+                  size={13}
+                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500"
+                />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar..."
+                  aria-label="Buscar fotos"
+                  autoFocus
+                  className="w-full rounded-md border border-white/10 bg-white/5 py-1.5 pl-8 pr-2 text-xs text-white outline-none placeholder:text-zinc-600 focus:border-white/20"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1 border-t border-white/10 pt-1">
+                {categories.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setCategory(item)}
+                    className={`whitespace-nowrap rounded-md px-3 py-1.5 text-left font-voice text-xs lowercase transition-colors ${
+                      category === item
+                        ? "bg-white/10 text-white"
+                        : "text-zinc-500 hover:text-white"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
