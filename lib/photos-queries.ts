@@ -22,6 +22,7 @@ interface PhotoRow {
   iso: number | null;
   aperture: string | null;
   shutter: string | null;
+  set_name: string | null;
 }
 
 function toPhoto(row: PhotoRow): Photo {
@@ -45,6 +46,7 @@ function toPhoto(row: PhotoRow): Photo {
     iso: row.iso ?? 0,
     aperture: row.aperture ?? "",
     shutter: row.shutter ?? "",
+    setName: row.set_name ?? null,
   };
 }
 

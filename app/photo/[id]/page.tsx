@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getPhotos } from "@/lib/photos-queries";
+import type { Photo } from "@/types";
 import PhotoDetail from "@/components/PhotoDetail";
 
 // Siempre datos frescos de Supabase (views correctas al abrir)
@@ -14,7 +15,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const photos = await getPhotos();
-  const photo = photos.find((p) => p.id === Number(id));
+  const photo = photos.find((p: Photo) => p.id === Number(id));
 
   if (!photo) {
     return {
@@ -47,16 +48,37 @@ export default async function PhotoPage({ params }: Props) {
   const { id } = await params;
   const photos = await getPhotos();
 
-  const photoIndex = photos.findIndex((p) => p.id === Number(id));
-  if (photoIndex === -1) notFound();
+  const photo = photos.find((p: Photo) => p.id === Number(id));
+  if (!photo) notFound();
 
-  const photo = photos[photoIndex];
-  const previousPhoto = photos[(photoIndex - 1 + photos.length) % photos.length];
-  const nextPhoto = photos[(photoIndex + 1) % photos.length];
+  // Carrete: todas las fotos del mismo grupo (mismo set_name), en orden de id.
+  // Si la foto no tiene grupo, el carrete es solo ella.
+  const group = photo.setName
+    ? photos.filter((p: Photo) => p.setName === photo.setName)
+    : [photo];
+  const initialIndex = Math.max(0, group.findIndex((p: Photo) => p.id === photo.id));
+
+  // Anterior / siguiente se mueven entre "portadas" (una por grupo),
+  // igual que el home, así no se repite el mismo carrete.
+  const seen = new Set<string>();
+  const covers = photos.filter((p: Photo) => {
+    if (!p.setName) return true;
+    if (seen.has(p.setName)) return false;
+    seen.add(p.setName);
+    return true;
+  });
+  const coverIndex = Math.max(
+    0,
+    covers.findIndex((p: Photo) => p.id === photo.id || (p.setName && p.setName === photo.setName))
+  );
+  const previousPhoto = covers[(coverIndex - 1 + covers.length) % covers.length];
+  const nextPhoto = covers[(coverIndex + 1) % covers.length];
 
   return (
     <PhotoDetail
       photo={photo}
+      group={group}
+      initialIndex={initialIndex}
       previousPhoto={previousPhoto}
       nextPhoto={nextPhoto}
     />

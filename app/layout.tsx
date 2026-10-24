@@ -70,7 +70,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
   <body className={`${orbitron.variable} ${inter.variable}`}>
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+  <ThemeProvider
+    attribute="class"
+    defaultTheme="light"
+    enableSystem={false}
+    storageKey="lqnsb-theme"
+  >
     <LenisProvider>{children}</LenisProvider>
   </ThemeProvider>
 </body>
