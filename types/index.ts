@@ -27,5 +27,6 @@ export interface Photo {
   aperture: string;
   shutter: string;
 
+  // Carrete: las fotos con el mismo valor se muestran juntas
   setName?: string | null;
 }

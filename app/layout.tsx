@@ -1,18 +1,10 @@
 import type { Metadata } from "next";
-import { Orbitron, Inter } from "next/font/google";
+// Fuente local (se instala con npm): no depende de internet para correr el sitio
+import "@fontsource-variable/inter";
 import "./globals.css";
 import { LenisProvider } from "@/components/LenisProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
-
-const orbitron = Orbitron({
-  subsets: ["latin"],
-  variable: "--font-orbitron",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: {
@@ -69,13 +61,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-  <body className={`${orbitron.variable} ${inter.variable}`}>
+  <body>
   <ThemeProvider
     attribute="class"
     defaultTheme="light"
-    enableSystem={false}
+    enableSystem
     storageKey="lqnsb-theme"
   >
+    <ThemeToggle />
     <LenisProvider>{children}</LenisProvider>
   </ThemeProvider>
 </body>

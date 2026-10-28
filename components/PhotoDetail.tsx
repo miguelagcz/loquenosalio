@@ -7,14 +7,13 @@ import Link from "next/link";
 import { useLiveViews } from "@/hooks/useLiveViews";
 import { useLikes } from "@/hooks/useLikes";
 import { downloadMedia, trackPhotoDownload } from "@/lib/media-actions";
+import { changePhotoLikes } from "@/lib/site-stats";
+import { ActionButton } from "@/components/ActionButton";
 import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Download,
-  Share2,
-  Check,
-  Heart,
 } from "lucide-react";
 
 import { Photo } from "@/types";
@@ -47,6 +46,13 @@ export default function PhotoDetail({
   const [extraDownloads, setExtraDownloads] = useState<Record<number, number>>({});
 
   const current = group[index] ?? photo;
+
+  // Un carrete comparte UNA sola descripción: la de la portada, o la primera que
+  // tenga texto dentro del grupo. No cambia al pasar de foto.
+  const description =
+    group[0]?.description?.trim() ||
+    group.find((p) => p.description?.trim())?.description?.trim() ||
+    "";
 
   // Las visitas se cuentan una vez por apertura de la página (la foto de la URL),
   // no cada vez que pasas de foto dentro del carrete.
@@ -121,6 +127,13 @@ export default function PhotoDetail({
     setExtraDownloads((d) => ({ ...d, [current.id]: (d[current.id] ?? 0) + 1 }));
   };
 
+  const handleLike = () => {
+    const wasLiked = liked.has(likeKey);
+    toggle(likeKey);
+    // suma/resta al total de likes del sitio (la caja principal del home)
+    changePhotoLikes(current.id, wasLiked ? -1 : 1);
+  };
+
   const handleShare = async () => {
     const url = `${window.location.origin}/photo/${photo.id}`;
     if (navigator.share) {
@@ -136,8 +149,15 @@ export default function PhotoDetail({
     setTimeout(() => setCopied(false), 1800);
   };
 
-  const round =
-    "flex h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-black/5 transition hover:bg-black hover:text-white dark:border-white/15 dark:bg-white/10 dark:hover:bg-white dark:hover:text-black";
+  // Proporción de la foto de la URL. El marco se ajusta a ella: una foto vertical
+  // de celular ocupa un marco angosto y alto (sin franjas vacías a los lados) y
+  // la información pasa a un panel lateral en escritorio.
+  const ratio = photo.width / photo.heightPx;
+  const portrait = ratio < 0.95;
+  const maxVh = portrait ? 84 : 72;
+  // Nunca más ancho que la foto original: así no se amplía y no se ve borrosa.
+  const frameWidth = `min(100%, calc(${maxVh}vh * ${ratio.toFixed(4)}), ${photo.width}px)`;
+
 
   return (
     <motion.main
@@ -151,6 +171,7 @@ export default function PhotoDetail({
         <div className="mb-6 flex items-center justify-between">
           <Link
             href="/"
+            scroll={false}
             className="flex w-fit items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-neutral-500 transition-colors hover:text-black dark:text-neutral-400 dark:hover:text-white"
           >
             <ArrowLeft size={14} />
@@ -161,121 +182,167 @@ export default function PhotoDetail({
           </span>
         </div>
 
-        {/* MARCO */}
-        <motion.div
-          initial={{ scale: 0.98, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-          className="rounded-md border border-black/20 bg-black/[0.02] p-1.5 dark:border-white/10 dark:bg-white/[0.03] sm:p-2"
+        <div
+          className={`flex flex-col items-center gap-3 ${
+            portrait ? "lg:flex-row lg:items-start lg:justify-center lg:gap-4" : ""
+          }`}
         >
-          <div
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            className="relative h-[58vh] w-full overflow-hidden rounded-sm bg-neutral-100 dark:bg-neutral-950 sm:h-[68vh]"
+          {/* MARCO — se ajusta a la proporción de la foto */}
+          <motion.div
+            initial={{ scale: 0.98, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+            style={{ width: frameWidth }}
+            className="flex-none rounded-md border border-black/20 bg-black/[0.02] p-1.5 dark:border-white/10 dark:bg-white/[0.03] sm:p-2"
           >
-            {/* CARRETE: scroll horizontal con snap (swipe nativo, fluido) */}
             <div
-              ref={trackRef}
-              onScroll={handleScroll}
-              className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              style={{ aspectRatio: ratio }}
+              className="relative w-full overflow-hidden rounded-sm bg-neutral-100 dark:bg-neutral-950"
             >
-              {group.map((p, i) => (
-                <div key={p.id} className="relative h-full w-full flex-none snap-center">
-                  <Image
-                    src={p.src}
-                    alt={p.title}
-                    fill
-                    className="object-contain"
-                    priority={i === initialIndex}
-                    sizes="100vw"
-                  />
-                </div>
-              ))}
+              {/* CARRETE: scroll horizontal con snap (swipe nativo, fluido) */}
+              <div
+                ref={trackRef}
+                onScroll={handleScroll}
+                className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {group.map((p, i) => (
+                  <div key={p.id} className="relative h-full w-full flex-none snap-center">
+                    <Image
+                      src={p.src}
+                      alt={p.title}
+                      fill
+                      quality={90}
+                      className="object-contain"
+                      priority={i === initialIndex}
+                      sizes="(max-width: 1024px) 100vw, 700px"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {isReel && (
+                <>
+                  {/* contador tipo insta */}
+                  <span className="pointer-events-none absolute right-3 top-3 rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-xl">
+                    {index + 1} / {group.length}
+                  </span>
+
+                  {/* flechas (escritorio) */}
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => goTo(index - 1)}
+                      aria-label="Anterior"
+                      className={`${glass} absolute left-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 sm:flex`}
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                  )}
+                  {index < group.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => goTo(index + 1)}
+                      aria-label="Siguiente"
+                      className={`${glass} absolute right-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 sm:flex`}
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  )}
+
+                  {/* puntos de vidrio */}
+                  <div className="absolute inset-x-0 bottom-3 flex justify-center">
+                    <div className="flex items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-3 py-2 backdrop-blur-xl">
+                      {group.map((p, i) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => goTo(i)}
+                          aria-label={`Ir a la foto ${i + 1}`}
+                          className={`h-1.5 rounded-full transition-all ${
+                            i === index ? "w-5 bg-white" : "w-1.5 bg-white/45 hover:bg-white/80"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
+          </motion.div>
 
-            {isReel && (
-              <>
-                {/* contador tipo insta */}
-                <span className="pointer-events-none absolute right-3 top-3 rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-xl">
-                  {index + 1} / {group.length}
-                </span>
-
-                {/* flechas (escritorio) */}
-                {index > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => goTo(index - 1)}
-                    aria-label="Anterior"
-                    className={`${glass} absolute left-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 sm:flex`}
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
+          {/* INFO — debajo de la foto; en escritorio, panel lateral si la foto es vertical */}
+          <motion.aside
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.5 }}
+            className={`w-full overflow-hidden rounded-2xl border border-black/10 bg-neutral-50 dark:border-white/10 dark:bg-neutral-950 ${
+              portrait ? "max-w-[min(100%,36rem)] lg:w-80 lg:flex-none" : "max-w-5xl"
+            }`}
+          >
+            <div className={portrait ? "" : "sm:grid sm:grid-cols-[1fr_auto] sm:items-stretch"}>
+              {/* título + descripción */}
+              <div className="p-5 sm:p-6">
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                  <span>#{String(current.id).padStart(4, "0")}</span>
+                  <span className="h-px w-4 bg-current opacity-40" />
+                  <span>{current.date}</span>
+                  {current.location && (
+                    <>
+                      <span className="h-px w-4 bg-current opacity-40" />
+                      <span className="truncate">{current.location}</span>
+                    </>
+                  )}
+                </div>
+                <h1 className="mt-3 text-2xl font-bold uppercase leading-[0.95] tracking-tighter sm:text-3xl">
+                  {current.title}
+                </h1>
+                {description && (
+                  <p className="mt-3 max-w-prose text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+                    {description}
+                  </p>
                 )}
-                {index < group.length - 1 && (
-                  <button
-                    type="button"
-                    onClick={() => goTo(index + 1)}
-                    aria-label="Siguiente"
-                    className={`${glass} absolute right-3 top-1/2 hidden h-10 w-10 -translate-y-1/2 sm:flex`}
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                )}
+              </div>
 
-                {/* puntos de vidrio */}
-                <div className="absolute inset-x-0 bottom-3 flex justify-center">
-                  <div className="flex items-center gap-1.5 rounded-full border border-white/25 bg-black/35 px-3 py-2 backdrop-blur-xl">
-                    {group.map((p, i) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => goTo(i)}
-                        aria-label={`Ir a la foto ${i + 1}`}
-                        className={`h-1.5 rounded-full transition-all ${
-                          i === index ? "w-5 bg-white" : "w-1.5 bg-white/45 hover:bg-white/80"
-                        }`}
-                      />
-                    ))}
+              {/* stats + acciones */}
+              <div
+                className={`flex flex-col border-t border-black/10 dark:border-white/10 ${
+                  portrait ? "" : "sm:border-l sm:border-t-0"
+                }`}
+              >
+                <div className="grid grid-cols-2 divide-x divide-black/10 dark:divide-white/10">
+                  <div className="px-5 py-4 sm:px-6">
+                    <p className="flex items-center gap-1.5 text-xl font-bold leading-none tracking-tighter">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                      {views.toLocaleString()}
+                    </p>
+                    <p className="mt-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                      views
+                    </p>
+                  </div>
+                  <div className="px-5 py-4 sm:px-6">
+                    <p className="flex items-center gap-1.5 text-xl font-bold leading-none tracking-tighter">
+                      <Download size={14} className="opacity-50" />
+                      {downloads.toLocaleString()}
+                    </p>
+                    <p className="mt-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                      descargas
+                    </p>
                   </div>
                 </div>
-              </>
-            )}
-          </div>
-
-          {/* INFO */}
-          <div className="flex flex-col gap-3 px-2 pb-2 pt-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="min-w-0">
-              <h1 className="truncate text-sm font-bold uppercase tracking-wide">
-                {current.title}
-              </h1>
-              <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500 dark:text-white/60">
-                {current.description || photo.description || current.date}
-              </p>
+                <div className="flex flex-1 items-center gap-2 border-t border-black/10 px-5 py-4 dark:border-white/10 sm:px-6">
+                  <ActionButton kind="like" active={liked.has(likeKey)} onClick={handleLike} />
+                  <ActionButton kind="link" active={copied} onClick={handleShare} />
+                  <ActionButton kind="download" onClick={handleDownload} />
+                  <span className="ml-auto text-[9px] font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                    {copied ? "link copiado" : isReel ? `${index + 1} / ${group.length}` : ""}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-shrink-0 flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-neutral-600 dark:text-white/70">
-              <span className="flex items-center gap-1.5 rounded-full border border-black/15 bg-black/5 px-2.5 py-1.5 dark:border-white/15 dark:bg-white/10">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                {views.toLocaleString()} views
-              </span>
-              <span className="flex items-center gap-1.5 rounded-full border border-black/15 bg-black/5 px-2.5 py-1.5 dark:border-white/15 dark:bg-white/10">
-                <Download size={11} />
-                {downloads.toLocaleString()}
-              </span>
-              <span className="rounded-full border border-black/15 bg-black/5 px-2.5 py-1.5 dark:border-white/15 dark:bg-white/10">
-                {current.date}
-              </span>
-              <button type="button" onClick={handleDownload} aria-label="Descargar" className={round}>
-                <Download size={13} />
-              </button>
-              <button type="button" onClick={handleShare} aria-label="Compartir" className={round}>
-                {copied ? <Check size={13} /> : <Share2 size={13} />}
-              </button>
-              <button type="button" onClick={() => toggle(likeKey)} aria-label="Favorito" className={round}>
-                <Heart size={13} fill={liked.has(likeKey) ? "currentColor" : "none"} />
-              </button>
-            </div>
-          </div>
-        </motion.div>
+          </motion.aside>
+        </div>
       </div>
     </motion.main>
   );

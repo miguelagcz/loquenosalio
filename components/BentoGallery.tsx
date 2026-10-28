@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Layers } from "lucide-react";
 import { motion } from "framer-motion";
 import { Photo } from "@/types";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { useLikesTotal } from "@/hooks/useLikesTotal";
+import { restoreHomeScroll, saveHomeScroll } from "@/lib/scroll-memory";
 
 interface BentoGalleryProps {
   photos: Photo[];
   stats: {
     photoCount: number;
     totalViews: number;
+    totalLikes: number;
     since: string;
   };
 }
@@ -72,6 +74,11 @@ const spanClasses =
   "[grid-column:span_var(--cm)] [grid-row:span_var(--rm)] lg:[grid-column:span_var(--cd)] lg:[grid-row:span_var(--rd)]";
 
 export function BentoGallery({ photos, stats }: BentoGalleryProps) {
+  const likes = useLikesTotal(stats.totalLikes);
+
+  // Al volver desde una foto, regresa a donde estabas
+  useEffect(() => restoreHomeScroll(), []);
+
   // Una sola tarjeta por grupo (set_name): la primera foto es la portada del carrete
   const counts = new Map<string, number>();
   for (const p of photos) if (p.setName) counts.set(p.setName, (counts.get(p.setName) ?? 0) + 1);
@@ -84,12 +91,7 @@ export function BentoGallery({ photos, stats }: BentoGalleryProps) {
   });
 
   return (
-    <section className="w-full px-2 py-2 sm:px-3 sm:py-3">
-      {/* NAV */}
-      <div className="mb-2 flex items-center justify-end px-1">
-        <ThemeToggle />
-      </div>
-
+    <section className="w-full px-2 pb-2 pt-14 sm:px-3 sm:pb-3 sm:pt-3">
       {/* Contenedor de consulta: alto de fila = ancho de una columna */}
       <div className="@container">
         <div className="grid auto-rows-[calc((100cqw-24px)/4)] grid-cols-4 gap-2 [grid-auto-flow:dense] lg:auto-rows-[calc((100cqw-88px)/12)] lg:grid-cols-12">
@@ -131,6 +133,7 @@ export function BentoGallery({ photos, stats }: BentoGalleryProps) {
             {[
               { value: stats.photoCount, label: "fotos" },
               { value: formatViews(stats.totalViews), label: "views" },
+              { value: formatViews(likes), label: "likes" },
               { value: stats.since, label: "desde" },
             ].map((s) => (
               <div key={s.label}>
@@ -185,6 +188,7 @@ function PhotoCell({
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, margin: "0px 0px -60px 0px" }}
+      id={`photo-${photo.id}`}
       style={{ "--cm": s.cm, "--rm": s.rm, "--cd": s.cd, "--rd": s.rd } as Vars}
       className={`${spanClasses} group relative overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-900`}
     >
@@ -196,6 +200,7 @@ function PhotoCell({
       <Link
         href={`/photo/${photo.id}`}
         aria-label={photo.title}
+        onClick={() => saveHomeScroll(photo.id)}
         onTouchStart={() => setTouched(true)}
         onTouchEnd={() => setTouched(false)}
         onTouchCancel={() => setTouched(false)}

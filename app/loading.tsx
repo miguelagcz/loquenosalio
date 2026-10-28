@@ -13,11 +13,7 @@ type Vars = React.CSSProperties & Record<`--${string}`, number>;
 export default function Loading() {
   return (
     <main className="min-h-screen bg-white text-black dark:bg-black dark:text-white">
-      <section className="w-full px-2 py-2 sm:px-3 sm:py-3">
-        <div className="mb-2 flex items-center justify-end px-1">
-          <div className="h-8 w-8 animate-pulse rounded-full bg-black/10 dark:bg-white/10" />
-        </div>
-
+      <section className="w-full px-2 pb-2 pt-14 sm:px-3 sm:pb-3 sm:pt-3">
         <div className="@container">
           <div className="grid auto-rows-[calc((100cqw-24px)/4)] grid-cols-4 gap-2 [grid-auto-flow:dense] lg:auto-rows-[calc((100cqw-88px)/12)] lg:grid-cols-12">
             {/* TÍTULO */}

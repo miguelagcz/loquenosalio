@@ -1,13 +1,20 @@
 import type { MetadataRoute } from "next";
 
-import { photos } from "@/data/photos";
+import { getPhotos } from "@/lib/photos-queries";
+import type { Photo } from "@/types";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://TU-DOMINIO.com";
+// Cambia esto por tu dominio real cuando publiques
+const baseUrl = "https://TU-DOMINIO.com";
 
-  const photoPages = photos.map((photo) => ({
+// Se regenera cada hora con las fotos que haya en Supabase
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const photos = await getPhotos();
+
+  const photoPages = photos.map((photo: Photo) => ({
     url: `${baseUrl}/photo/${photo.id}`,
-    lastModified: new Date(photo.date),
+    lastModified: new Date(),
     changeFrequency: "monthly" as const,
     priority: 0.7,
   }));
@@ -19,7 +26,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 1,
     },
-
     ...photoPages,
   ];
 }
